@@ -75,7 +75,7 @@ def main():
 	last player who can place a card on the board is the winner. By megadardery :D:""")
 
 	print()
-	x = input('Want to play againest a human, or againest world\'s best AI? "computer/human"')
+	x = input('Want to play againest a human, or againest world\'s best AI? "computer/human": ')
 	while (x=='human' or x=='computer'):
 		if (x == 'human'):
 			coregame(True)

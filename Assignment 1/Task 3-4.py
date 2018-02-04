@@ -9,7 +9,7 @@ def checkPossible():
 	for i in range(size2):
 		if ((i+1) % size != 0 and (i+1)<size2 and game[i] != 'X' and game[i+1] != 'X'): #horizontal stick
 			return True
-		elif ((i + 4) < size2 and game[i] != 'X' and game[i+4] != 'X'): #vertical stick
+		elif ((i + size) < size2 and game[i] != 'X' and game[i+size] != 'X'): #vertical stick
 			return True
 	return False
 
@@ -70,18 +70,18 @@ def coregame(human):
 
 def main():
 	print("""Two squares game:\n\tThis game is played on a board of 4 x 4 squares. Two players take turns;
-	each of them takes turn to place a rectangle (that covers two squares) on the board, covering
-	any 2 squares. Only one rectangle can be on a square. A square cannot be covered twice. The
-	last player who can place a card on the board is the winner. By megadardery :D:""")
+each of them takes turn to place a rectangle (that covers two squares) on the board, covering
+any 2 squares. Only one rectangle can be on a square. A square cannot be covered twice. The
+last player who can place a card on the board is the winner. By megadardery :D:""")
 
 	print()
-	x = input('Want to play againest a human, or againest world\'s best AI? "computer/human": ')
-	while (x=='human' or x=='computer'):
-		if (x == 'human'):
+	x = input('How many players are going to play? "1/2": ')
+	while (x=="1" or x=="2"):
+		if (x == "2"):
 			coregame(True)
 		else:
 			coregame(False)
-		x = input('Play again? againest a human or againest AI? "computer/human": ')
+		x = input('Play again? How many players? "1/2": ')
 
 size = 4		#For the AI to work properly, size should never be odd
 size2 = size*size

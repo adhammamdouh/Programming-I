@@ -120,10 +120,6 @@ last player who can place a card on the board is the winner. By megadardery :D:"
 size = 4		#For the AI to work properly, size should never be odd
 size2 = size*size
 
-mychoices = []
-for i in range(1,size2-size):
-	if (i%size!=0): mychoices.append(i)
-
 game = []
 
 main()

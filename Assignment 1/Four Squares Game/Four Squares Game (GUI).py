@@ -1,10 +1,21 @@
-import pygame, sys
+import pygame, sys, random
 from pygame.locals import *
+
+
+FPS = 60 # frames per second setting
+SURF = pygame.display.set_mode((550, 800))
+FPSCLOCK = pygame.time.Clock()
+
+
+CELLCOUNT = 4
 
 pygame.init()
 
-FPS = 60 # frames per second setting
-fpsClock = pygame.time.Clock()
+#ENUMS-------------------------------------
+class gamestate:
+    notstarted = 1
+    running = 2
+    stopped = 3
 
 class colors:
     white       = (255, 255, 255)
@@ -21,11 +32,12 @@ class cellstate:
     used = 1
     highlighted = 2
     normal = 3
-        
+#------------------------------------------
+    
 class Board:
             
-    def __init__(self,screen,validity):
-        self._cellcount = 4
+    def __init__(self,count, screen,validity):
+        self._cellcount = count
         self._cellcount2 = self._cellcount * self._cellcount
         self._bordersize = 3
         self._margin = 2
@@ -40,7 +52,6 @@ class Board:
         
         self.cells = [cellstate.normal] * self._cellcount2
         
-        self.marginColor = colors.blue
         self.borderColor = colors.black
 
         self.cellColor = colors.white
@@ -120,7 +131,7 @@ class Board:
     def getBoardBounds(self):
         return pygame.Rect(self._offsetx, self._offsety, self.getTotalSize(), self.getTotalSize())
 
-    def draw(self):
+    def draw(self,SURF):
         pygame.draw.rect(SURF, self.borderColor, self.getBoardBounds())
         for i in range(self._cellcount2):
             mycolor = self.cellColor
@@ -158,7 +169,7 @@ def isvalid(self,a,b):
     else:
         return False
 
-def checkPossible():
+def checkPossible(myBoard):
     for i in range(myBoard._cellcount2-1):
         if ((i+1) % myBoard._cellcount != 0 and (i+1)<myBoard._cellcount2 and myBoard.cells[i] != cellstate.used and myBoard.cells[i+1] != cellstate.used):             #horizontal stick
             return True
@@ -166,24 +177,70 @@ def checkPossible():
             return True
     return False
     
+def getAImove(myBoard):
+    assert myBoard._cellcount2 % 2 == 0
+    a = myBoard._cellcount2 - myBoard.rectangles[-1][0] - 1
+    b = myBoard._cellcount2 - myBoard.rectangles[-1][1] - 1
+    return a,b
 
+def getAIrandommove(myBoard):
+    a = 0
+    b = 0
+    while True:
+        shift1 = random.randint(0,myBoard._cellcount-2)
+        shift2 = random.randint(0,myBoard._cellcount-1)
+        vertical = bool(random.getrandbits(1))
+
+        if (vertical):
+            a = myBoard._cellcount * shift1 + shift2
+            b = a + myBoard._cellcount
+        else:
+            a = shift1 + myBoard._cellcount * shift2
+            b = a + 1
+		
+        if (myBoard.cells[a] != cellstate.used and myBoard.cells[b] != cellstate.used):
+            break
+
+    return a,b
+    
 def main():
-    global myBoard
+
+    def newGame(ai):
+        nonlocal AIplayer,player,myBoard,myGameState
+        myBoard = Board(CELLCOUNT,(25,25,500,500),isvalid)
+        myGameState = gamestate.running
+        player = 1
+        AIplayer = ai
+    
     pygame.display.set_caption('Four squares game!')
+
     
     mousex = 0
     mousey = 0
 
+    AIplayer = None
+    player = None
+    myBoard = None
+    myGameState = None
+    newGame(0)
+
+    msgGameStateFont = pygame.font.Font('freesansbold.ttf', 30)
+    msgGameOptionsFont = pygame.font.Font('freesansbold.ttf', 20)
     
-    myBoard = Board((25,25,500,500),isvalid)
-    myGameState = gamestate.running
-    player = 1
+    msgNewGame1 = msgGameOptionsFont.render("New Game (2 players)", True, colors.white, colors.black)
+    msgNewGameRect1 = msgNewGame1.get_rect()
+    msgNewGameRect1.topleft = (310, 680)
 
-    msgNewGame = msgGameOptionsFont.render("New Game", True, colors.white, colors.black)
-    msgNewGameRect = msgNewGame.get_rect()
-    msgNewGameRect.topleft = (380, 680)
+    msgNewGame2 = msgGameOptionsFont.render("New Game (vs. Easy AI)", True, colors.white, colors.black)
+    msgNewGameRect2 = msgNewGame2.get_rect()
+    msgNewGameRect2.topleft = (310, 710)
 
-    print(player)
+    msgNewGame3 = msgGameOptionsFont.render("New Game (vs. Hard AI)", True, colors.white, colors.black)
+    msgNewGameRect3 = msgNewGame3.get_rect()
+    msgNewGameRect3.topleft = (310, 740)
+
+    msgsPrint = ((msgNewGame1,msgNewGameRect1), (msgNewGame2,msgNewGameRect2), (msgNewGame3,msgNewGameRect3))
+    
     while True: # main game loop
         mouseclicked = False
         mymessage = "Player " + str(player) + " 's Turn"
@@ -204,21 +261,40 @@ def main():
         mycell = myBoard.getCellAt(mousex, mousey)
 
         if mouseclicked:
-            if msgNewGameRect.collidepoint(mousex, mousey):
-                myBoard = Board((25,25,500,500),isvalid)
-                myGameState = gamestate.running
-                player = 1
+            if msgNewGameRect1.collidepoint(mousex, mousey):
+                newGame(0)
                 continue
-                
+            elif msgNewGameRect2.collidepoint(mousex, mousey):
+                newGame(1)
+                continue
+            elif msgNewGameRect3.collidepoint(mousex, mousey):
+                newGame(2)
+                continue
+            
             if myGameState == gamestate.running and mycell != None :
                 if myBoard.setSelected(mycell,player) == True:
-                    if checkPossible() == False:
+                    if checkPossible(myBoard) == False:
                         myGameState = gamestate.stopped
-                    else: 
-                        if player == 1:
-                            player = 2
+                    else:
+                        if AIplayer == 1:
+                            a,b = getAIrandommove(myBoard)
+                            myBoard.setSelected(a,2)
+                            myBoard.setSelected(b,2)
+                            if checkPossible(myBoard) == False:
+                                myGameState = gamestate.stopped
+                                player = "AI"
+                        elif AIplayer == 2:
+                            a,b = getAImove(myBoard)
+                            myBoard.setSelected(a,2)
+                            myBoard.setSelected(b,2)
+                            if checkPossible(myBoard) == False:
+                                myGameState = gamestate.stopped
+                                player = "AI"
                         else:
-                            player = 1
+                            if player == 1:
+                                player = 2
+                            else:
+                                player = 1
 
         else:
             if myGameState == gamestate.running:
@@ -227,32 +303,23 @@ def main():
         if myGameState == gamestate.running:
             mymessage = "Player " + str(player) + "'s Turn"
         else:
-
-            mymessage = "Player " + str(player) + " Won!!! Congratulations!!!"
+            if player == "AI":
+                mymessage = "The AI has won :P Haha!"
+            else:
+                mymessage = "Player " + str(player) + " Won!!! Congratulations!!!"
         #drawing stuff        
-        myBoard.draw()
+        myBoard.draw(SURF)
         
         msgGameState = msgGameStateFont.render(mymessage, True, colors.white)
         msgGameStateRect = msgGameState.get_rect()
         msgGameStateRect.topleft = (25, 550)
         SURF.blit(msgGameState, msgGameStateRect)
 
-        SURF.blit(msgNewGame, msgNewGameRect)
+        for i in msgsPrint:
+            SURF.blit(i[0], i[1])
         
         pygame.display.update()
-        fpsClock.tick(FPS)
-
-
-myBoard = None
-SURF = pygame.display.set_mode((550, 800))
-
-msgGameStateFont = pygame.font.Font('freesansbold.ttf', 30)
-msgGameOptionsFont = pygame.font.Font('freesansbold.ttf', 25)
-
-class gamestate:
-    notstarted = 1
-    running = 2
-    stopped = 3
+        FPSCLOCK.tick(FPS)
 
 if __name__ == '__main__':
     main()

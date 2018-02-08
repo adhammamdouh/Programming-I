@@ -1,0 +1,32 @@
+//Main game algorithm:
+
+1.      Take valid input from player 1:
+2.      Mark his/her inputs as filled
+3.      If no more moves are possible:
+3.1.            player 1 won
+3.2.            exit
+
+4.      Take valid input from player 2:
+5.      Mark his/her inputs as filled
+6.      If no more moves are possible:
+6.1.           player 2 won
+6.2.           exit
+
+7.      go to step #1
+
+
+//Perfect AI. algorithm
+//(Mirror player 1's input)
+
+1.      Get player 1's move as x and y
+2.      a = 16 - x + 1
+3.      b = 16 - y + 1
+4.      Set A.I's move as a and b
+
+//Know if there are possible moves:
+
+1.      FOR i FROM 1 TO 16	(inclusive)
+1.1.           IF (the ith square is free) AND (the square to the right of the ith is free OR the square under the ith is free)
+1.1.1.               return ValidMoveExists
+
+2.      return NoMoreMovesArePossible
